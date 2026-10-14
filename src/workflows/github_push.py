@@ -33,9 +33,11 @@ async def push_to_github(inp: PushInput) -> PushResult:
     import os
     import httpx
 
-    token = os.environ.get("GITHUB_TOKEN")
+    token = (os.environ.get("GITHUB_TOKEN")
+             or os.environ.get("github_token")
+             or os.environ.get("GH_TOKEN"))
     if not token:
-        return PushResult(ok=False, detail="GITHUB_TOKEN environment variable is not set")
+        return PushResult(ok=False, detail="No GitHub token found in environment (GITHUB_TOKEN / github_token / GH_TOKEN)")
 
     headers = {
         "Authorization": f"Bearer {token}",
