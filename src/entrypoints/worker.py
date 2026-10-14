@@ -4,17 +4,17 @@ import asyncio
 import sys
 from pathlib import Path
 
-# Make the project root importable regardless of the working directory.
+# Make the project root (/app in the container) importable.
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from mistralai.workflows import run_worker
+import mistralai.workflows as workflows
 from src.workflows.github_push import GithubPushWorkflow
 
 
 async def main() -> None:
-    await run_worker([GithubPushWorkflow])
+    await workflows.run_worker([GithubPushWorkflow])
 
 
 if __name__ == "__main__":
