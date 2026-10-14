@@ -10,6 +10,7 @@ import mistralai.workflows as workflows
 class FileToPush(BaseModel):
     path: str
     content: str
+    encoding: str = "utf-8"  # "utf-8" (text) or "base64" (binary)
 
 
 class PushInput(BaseModel):
@@ -69,8 +70,11 @@ async def push_to_github(inp: PushInput) -> PushResult:
 
         tree_items = []
         for f in inp.files:
+            enc = (f.encoding or "utf-8").lower()
+            if enc not in ("utf-8", "base64"):
+                return PushResult(ok=False, detail=f"unsupported encoding for {f.path}: {enc}")
             rb = await c.post(f"{base}/git/blobs", json={
-                "content": f.content, "encoding": "utf-8"})
+                "content": f.content, "encoding": enc})
             rb.raise_for_status()
             tree_items.append({"path": f.path, "mode": "100644", "type": "blob",
                                "sha": rb.json()["sha"]})
@@ -96,7 +100,7 @@ async def push_to_github(inp: PushInput) -> PushResult:
 @workflows.workflow.define(
     name="github-push",
     workflow_display_name="GitHub Push",
-    workflow_description="Push one or more files to a GitHub repository in a single commit.",
+    workflow_description="Push one or more files (text or base64 binary) to a GitHub repository in a single commit.",
 )
 class GithubPushWorkflow:
     @workflows.workflow.entrypoint
